@@ -190,6 +190,8 @@ except ImportError:
         print('We need BeautifulSoup, sorry...')
         sys.exit(1)
 
+from bs4 import NavigableString, Tag
+
 # Support unicode in both Python 2 and 3. In Python 3, unicode is str.
 if sys.version_info[0] == 3:
     unicode = str # pylint: disable-msg=W0622
@@ -567,9 +569,14 @@ class ScholarArticleParser120726(ScholarArticleParser):
         for tag in div:
             if not hasattr(tag, 'name'):
                 continue
+            # Ref: https://github.com/ckreibich/scholar.py/issues/118
+            # Ref: https://github.com/ckreibich/scholar.py/issues/116
             if str(tag).lower().find('.pdf'):
-                if tag.find('div', {'class': 'gs_ttss'}):
-                    self._parse_links(tag.find('div', {'class': 'gs_ttss'}))
+                if isinstance(tag, NavigableString):
+                    continue
+                if isinstance(tag, Tag):                 
+                    if tag.find('div', {'class': 'gs_or_ggsm'}):
+                        self._parse_links(tag.find('div', {'class': 'gs_or_ggsm'}))
 
             if tag.name == 'div' and self._tag_has_class(tag, 'gs_ri'):
                 # There are (at least) two formats here. In the first
